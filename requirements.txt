@@ -1,0 +1,7 @@
+flask
+pandas
+numpy
+scikit-learn
+lightgbm
+gunicorn
+flask-cors  # Allows requests from different origins (Needed for Botpress)
