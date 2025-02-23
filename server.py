@@ -2,9 +2,11 @@ import pandas as pd
 import numpy as np
 from flask import Flask, request, jsonify
 import pickle
+import requests
+from flask_cors import CORS 
 
 app = Flask(__name__)
-
+CORS(app)
 # Load the model
 try:
     with open("models/lgbm_model.pkl", "rb") as f:
@@ -60,6 +62,27 @@ def predict():
         print("Prediction error:", e)
         return jsonify({"error": str(e)}), 500
 
+API_URL = "https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta"
+HEADERS = {"Authorization": "Bearer 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"}
+
+def get_hf_response(prompt):
+    response = requests.post(API_URL, headers=HEADERS, json={"inputs": prompt})
+    return response.json()
+
+@app.route('/get-recommendations', methods=['POST'])
+def get_recommendations():
+    data = request.json
+    prompt = data.get('prompt')
+    
+    if not prompt:
+        return jsonify({"error": "Prompt is required"}), 400
+    
+    try:
+        hf_response = get_hf_response(prompt)
+        return jsonify(hf_response)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
 if __name__ == "__main__":
     from waitress import serve
     print("🚀 Starting production server...")
